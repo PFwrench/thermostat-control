@@ -3,18 +3,13 @@ import time
 
 from Adafruit_IO import *
 
-ADAFRUIT_IO_KEY      = '77984bef8d584acc842e0e4cc50480c4'
-ADAFRUIT_IO_USERNAME = 'pfrench'
+ADAFRUIT_IO_KEY      = '...'
+ADAFRUIT_IO_USERNAME = '...'
 
 # Set to the ID of the feed to subscribe to for updates.
-FEED_ID = 'climate-data-1'
-FEED_ID2 = 'climate-data-2'
-FEED_ID3 = 'climate-data-3'
-FEED_ID4 = 'climate-data-4'
-FEED_ID_TEMP = 'temperature'
-FEED_ID_HEATING = 'heating'
-FEED_ID_COOLING = 'cooling'
+FEED_ID = '...'
 
+NUMBER_OF_SENSORS = 1
 
 # Define callback functions which will be called when certain events happen.
 def connected(client):
@@ -23,21 +18,18 @@ def connected(client):
     # passed to this function is the Adafruit IO MQTT client so you can make
     # calls against it easily.
     print 'Connected to Adafruit IO!  Listening for changes...'
-    # Subscribe to changes on a feed named DemoFeed.
+    # Subscribe to changes on FEED_ID.
     client.subscribe(FEED_ID)
-    client.subscribe(FEED_ID2)
-    client.subscribe(FEED_ID3)
-    client.subscribe(FEED_ID4)
-    client.subscribe(FEED_ID_TEMP)
-    client.subscribe(FEED_ID_COOLING)
-    client.subscribe(FEED_ID_HEATING)
-	
+
 def disconnected(client):
     # Disconnected function will be called when the client disconnects.
     print 'Disconnected from Adafruit IO!'
     sys.exit(1)
 
+# Counts the number of feeds that have updated
 count = 0
+
+# Adds together the updated temperatures to be averaged later
 totalTemp = 0.0
 
 def message(client, feed_id, payload):
@@ -49,18 +41,18 @@ def message(client, feed_id, payload):
 
     print 'Feed {0} received new value: {1}'.format(feed_id, payload)
     if feed_id == FEED_ID_TEMP:
-	print 'Publishing temperature change to feedback.'
+	    print 'Publishing temperature change to feedback.'
         client.publish('feedback', 'Registered temperature change of ' + payload + '.')
     if feed_id == FEED_ID or feed_id == FEED_ID2 or feed_id == FEED_ID3 or feed_id == FEED_ID4:
-	count += 1
-	totalTemp += float(payload)
-	if count == 4:
+	       count += 1
+	       totalTemp += float(payload)
+
+    # Publishes to a feed called feedback that is an overall feed of what the system is doing
+	if count == NUMBER_OF_SENSORS:
 	    print 'Publishing current temperature to feedback.'
-            client.publish('feedback', 'Current average temperature: ' + str(totalTemp / 4) + ' degrees F')
+        client.publish('feedback', 'Current average temperature: ' + str(totalTemp / NUMBER_OF_SENSORS) + ' degrees F')
 	    count = 0
 	    totalTemp = 0.0
-
-	
 
 # Create an MQTT client instance.
 client = MQTTClient(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
